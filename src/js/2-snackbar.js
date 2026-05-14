@@ -37,13 +37,20 @@ function onSubmit(event) {
   const promise = new Promise((resolve, reject) => {
     setTimeout(() => {
       if (isSuccess) {
-        resolve(`Fulfilled promise in ${delay}ms`);
+        resolve(delay);
       } else {
-        reject(`Rejected promise in ${delay}ms`);
+        reject(delay);
       }
     }, delay);
   });
   promise
-    .then(value => iziToast.show({ message: value, ...fulfillOpt }))
-    .catch(error => iziToast.show({ message: error, ...rejectOpt }));
+    .then(delay =>
+      iziToast.show({
+        message: `Fulfilled promise in ${delay}ms`,
+        ...fulfillOpt,
+      })
+    )
+    .catch(delay =>
+      iziToast.show({ message: `Rejected promise in ${delay}ms`, ...rejectOpt })
+    );
 }

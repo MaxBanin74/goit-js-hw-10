@@ -16,7 +16,7 @@ const options = {
   minuteIncrement: 1,
   onClose(selectedDates) {
     userSelectedDate = selectedDates[0].getTime();
-    btn.disabled = userSelectedDate < Date.now();
+    btn.disabled = userSelectedDate <= Date.now();
     if (btn.disabled)
       iziToast.show({
         message: 'Please choose a date in the future',
@@ -38,20 +38,23 @@ const options = {
 
 const fp = flatpickr('#datetime-picker', options); // flatpickr
 
-function decodeMs(delta) {
-  const secMs = 1000;
-  const minMs = 60 * secMs;
-  const hourMs = 60 * minMs;
-  const dayMs = 24 * hourMs;
+function convertMs(ms) {
+  // Number of milliseconds per unit of time
+  const second = 1000;
+  const minute = second * 60;
+  const hour = minute * 60;
+  const day = hour * 24;
 
-  const day = Math.floor(delta / dayMs);
-  delta %= dayMs;
-  const hour = Math.floor(delta / hourMs);
-  delta %= hourMs;
-  const min = Math.floor(delta / minMs);
-  delta %= minMs;
-  const sec = Math.floor(delta / secMs);
-  return { day, hour, min, sec };
+  // Remaining days
+  const days = Math.floor(ms / day);
+  // Remaining hours
+  const hours = Math.floor((ms % day) / hour);
+  // Remaining minutes
+  const minutes = Math.floor(((ms % day) % hour) / minute);
+  // Remaining seconds
+  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+
+  return { days, hours, minutes, seconds };
 }
 
 const dayEl = document.querySelector('.field .value[data-days]');
@@ -59,11 +62,11 @@ const hourEl = document.querySelector('.field .value[data-hours]');
 const minEl = document.querySelector('.field .value[data-minutes]');
 const secEl = document.querySelector('.field .value[data-seconds]');
 
-function displayLastTime({ day, hour, min, sec }) {
-  dayEl.textContent = String(day).padStart(2, '0');
-  hourEl.textContent = String(hour).padStart(2, '0');
-  minEl.textContent = String(min).padStart(2, '0');
-  secEl.textContent = String(sec).padStart(2, '0');
+function displayLastTime({ days, hours, minutes, seconds }) {
+  dayEl.textContent = String(days).padStart(2, '0');
+  hourEl.textContent = String(hours).padStart(2, '0');
+  minEl.textContent = String(minutes).padStart(2, '0');
+  secEl.textContent = String(seconds).padStart(2, '0');
 }
 
 btn.addEventListener('click', event => {
@@ -73,11 +76,10 @@ btn.addEventListener('click', event => {
     const delta = userSelectedDate - Date.now();
     if (delta <= 0) {
       clearInterval(intId);
-      btn.disabled = false;
       date.disabled = false;
-      displayLastTime({ day: 0, hour: 0, min: 0, sec: 0 });
+      displayLastTime({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       return;
     }
-    displayLastTime(decodeMs(delta));
+    displayLastTime(convertMs(delta));
   }, 1000);
 });
